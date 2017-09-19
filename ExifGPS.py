@@ -1,9 +1,13 @@
-#Author : Benjamin Barton
-#Data   : 1/13/2016
-#Purpose: Read EXIF data and retrieve GPS degree's
+"""
+
+This is mostly a practice exercise, 
+the purpose is to retrieve GPS information 
+from a provided EXIF file. 
+
+"""
 import struct
 import sys
-#should use better structure in the future:
+
 TAGS = {
     0x8825: "GPSInfo"
     }
@@ -18,14 +22,13 @@ GPSTAGS = {
     4: ("GPSLongitude",LONG)
 }
 
-#will get gps location from exif data
+
 def get_gps_data(f):
     exif_data = []
     image_format = ''
     #skip reading number of entries, straight to reading tag of first entry
     #if we put counter to 8 we can read number of entries in IFD, which would determine how many loops are executed
-    #size = struct.unpack('h',f.read(2))
-    counter = 400 #was 10
+    counter = 400 
     offset = counter
     count = 0
     #get byteorder
@@ -39,16 +42,16 @@ def get_gps_data(f):
         image_format = '>'
     f.seek(8)    
     size = struct.unpack('h',f.read(2))  
-   ####search through file, retrieving gps tags###############
+    #search through file, retrieving gps tags#
+
     found = False
     while (found == False):
-#searching through IFD for entry with specific tag 
+        #searching through IFD for entry with specific tag 
         offset = counter
-        #make sure file pointer starts at 10
         f.seek(offset)
         header_tag = struct.unpack(((image_format+'H')),f.read(2))
         
-      ###### GPS INFORMATION #######
+        #GPS INFORMATION
         if header_tag[0] == 0x8825:
             i = 4
             jump = 1
@@ -66,9 +69,7 @@ def get_gps_data(f):
                 #data that is needed, still has several errors
                 #need to unpack using different arguments, currently system dependent 
                 if(test == 1):
-                    #this print shows direction
                     direction =(struct.unpack(((image_format+'c')),f.read(1)))[0]
-                    
                     jump = 4
                     counter += 12
                     #f.read(11)
@@ -76,8 +77,6 @@ def get_gps_data(f):
                     #go to location in file where specific GPS data is held
                     ref = ((struct.unpack((image_format+'I'),f.read(4))))
                     f.seek(ref[0])
-                    
-                    
 
                     #DECIMAL
                     numerator = (struct.unpack((image_format + 'I'),f.read(4)))
@@ -103,9 +102,7 @@ def get_gps_data(f):
                         solution = -solution
                         
                     exif_data.append(solution)
-                    #switch back to jump 1
                     jump = 1
-                    #increment counter/offset
                     counter += 12
             found = True
         else:
